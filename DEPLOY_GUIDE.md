@@ -127,8 +127,8 @@ cp .env.example .env
 npm install
 
 # Chạy development
-npm run dev
-# → Server chạy tại http://localhost:5000
+
+# → Server chnpm run devạy tại http://localhost:5000
 # → Mở http://localhost:5000 để xem web
 ```
 
