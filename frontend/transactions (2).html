@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFinance – Giao Dịch</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#4F46E5;--primary-light:#6366f1;--primary-glow:rgba(79,70,229,0.25);--secondary:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#0B0F1A;--bg3:#1C2333;--card:#161D2F;--card2:#1E2740;--border:rgba(255,255,255,0.07);--text:#F0F4FF;--text2:#94A3B8;--text3:#64748B;--sidebar-w:260px;--header-h:70px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;z-index:100;transition:transform .3s}
+.sidebar-logo{display:flex;align-items:center;gap:12px;padding:0 24px 32px;border-bottom:1px solid var(--border)}
+.logo-icon{width:40px;height:40px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo-text{font-size:18px;font-weight:700}.logo-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.sidebar-nav{flex:1;padding:24px 0}
+.nav-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:8px 24px 4px}
+.nav-item{display:flex;align-items:center;gap:14px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s;text-decoration:none;position:relative}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--text);background:rgba(79,70,229,0.12)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
+.nav-icon{width:20px;text-align:center;font-size:18px}
+.sidebar-footer{padding:20px 24px;border-top:1px solid var(--border)}
+.user-info{display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px;border-radius:12px}
+.user-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#818CF8);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.user-name{font-size:14px;font-weight:600}.user-role{font-size:11px;color:var(--text3)}
+.logout-btn{margin-left:auto;color:var(--text3);font-size:18px;background:none;border:none;cursor:pointer}
+.logout-btn:hover{color:var(--danger)}
+.main{margin-left:var(--sidebar-w);min-height:100vh}
+.header{height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;position:sticky;top:0;z-index:90}
+.header-title{font-size:20px;font-weight:700;margin-right:auto}
+.header-title span{color:var(--primary-light)}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text2);transition:all .2s}
+.icon-btn:hover{border-color:var(--primary);color:var(--primary)}
+.header-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#818CF8);display:flex;align-items:center;justify-content:center;font-weight:700}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99}
+.content{padding:28px 32px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:24px;font-weight:800}
+.btn{padding:11px 22px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 16px var(--primary-glow)}
+.btn-primary:hover{background:var(--primary-light);transform:translateY(-1px)}
+/* Filters */
+.filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.filter-select{padding:9px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+.filter-select:focus{border-color:var(--primary)}
+.filter-select option{background:var(--bg3)}
+/* Table */
+.tx-table{width:100%;border-collapse:collapse}
+.tx-table th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);border-bottom:1px solid var(--border)}
+.tx-table td{padding:14px 16px;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.tx-table tr:hover td{background:rgba(255,255,255,0.02)}
+.tx-icon-sm{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+.badge-income{background:rgba(34,197,94,0.15);color:var(--secondary)}
+.badge-expense{background:rgba(239,68,68,0.15);color:var(--danger)}
+.amount-positive{color:var(--secondary);font-weight:700}
+.amount-negative{color:var(--danger);font-weight:700}
+.delete-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:4px 8px;border-radius:8px;transition:all .2s}
+.delete-btn:hover{background:rgba(239,68,68,0.1);color:var(--danger)}
+.pagination{display:flex;gap:8px;justify-content:center;margin-top:20px}
+.page-btn{width:36px;height:36px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;transition:all .2s}
+.page-btn:hover,.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:16px}
+.empty-state p{font-size:15px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px;width:100%;max-width:460px;transform:translateY(20px);transition:transform .3s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary)}
+.form-group select option{background:var(--bg3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-btns{display:flex;gap:12px;margin-top:8px}
+.btn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-cancel:hover{border-color:var(--primary);color:var(--text)}
+.type-toggle{display:flex;gap:8px;margin-bottom:20px}
+.type-btn{flex:1;padding:10px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .2s}
+.type-btn.income.active{background:rgba(34,197,94,0.15);border-color:var(--secondary);color:var(--secondary)}
+.type-btn.expense.active{background:rgba(239,68,68,0.15);border-color:var(--danger);color:var(--danger)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:500;z-index:300;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid var(--secondary);color:var(--secondary)}
+.toast.error{border-left:4px solid var(--danger);color:var(--danger)}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 0;z-index:200}
+.mobile-nav-inner{display:flex;justify-content:space-around}
+.mob-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;border-radius:12px;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3)}
+.mob-item.active{color:var(--primary)}.mob-icon{font-size:22px}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,.5)}
+  .overlay.show{display:block}.hamburger{display:block}.main{margin-left:0}
+  .content{padding:20px 16px 90px}.tx-table th:nth-child(3),.tx-table td:nth-child(3){display:none}
+  .mobile-nav{display:block}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">💰</div>
+    <div><div class="logo-text">SmartFinance</div><div class="logo-sub">Quản Lý Tài Chính</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Chính</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Tổng Quan</a>
+    <a class="nav-item active" href="transactions.html"><span class="nav-icon">💳</span> Giao Dịch</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📊</span> Phân Tích</a>
+    <a class="nav-item" href="#"><span class="nav-icon">🎯</span> Mục Tiêu Tiết Kiệm</a>
+    <div class="nav-label" style="margin-top:8px">Khác</div>
+    <a class="nav-item" href="#"><span class="nav-icon">🔔</span> Thông Báo</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span> Cài Đặt</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sidebarAvatar">N</div>
+      <div><div class="user-name" id="sidebarName">...</div><div class="user-role">Tài khoản Premium</div></div>
+      <button class="logout-btn" onclick="logout()">⇥</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="header">
+    <button class="hamburger" onclick="openSidebar()">☰</button>
+    <div class="header-title">Giao <span>Dịch</span></div>
+    <div class="icon-btn">🔔</div>
+    <div class="header-avatar" id="headerAvatar">N</div>
+  </header>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">Tất Cả Giao Dịch</div>
+      <button class="btn btn-primary" onclick="openModal()">+ Thêm Giao Dịch</button>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <select class="filter-select" id="filterType" onchange="loadTransactions()">
+          <option value="">Tất cả loại</option>
+          <option value="income">Thu nhập</option>
+          <option value="expense">Chi tiêu</option>
+        </select>
+        <select class="filter-select" id="filterMonth" onchange="loadTransactions()">
+          <option value="">Tất cả tháng</option>
+          <option value="1">Tháng 1</option><option value="2">Tháng 2</option>
+          <option value="3">Tháng 3</option><option value="4">Tháng 4</option>
+          <option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+          <option value="7">Tháng 7</option><option value="8">Tháng 8</option>
+          <option value="9">Tháng 9</option><option value="10">Tháng 10</option>
+          <option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+        </select>
+        <select class="filter-select" id="filterYear" onchange="loadTransactions()">
+          <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
+        </select>
+      </div>
+      <div id="txContent">
+        <div style="text-align:center;padding:40px;color:var(--text3)">Đang tải...</div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Thêm Giao Dịch</div>
+    <div class="type-toggle">
+      <button class="type-btn income active" id="typeIncome" onclick="setType('income')">📈 Thu Nhập</button>
+      <button class="type-btn expense" id="typeExpense" onclick="setType('expense')">📉 Chi Tiêu</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Số Tiền (₫)</label><input type="number" id="txAmount" placeholder="100000" min="1"></div>
+      <div class="form-group"><label>Ngày</label><input type="date" id="txDate"></div>
+    </div>
+    <div class="form-group"><label>Danh Mục</label><select id="txCategory"></select></div>
+    <div class="form-group"><label>Ghi Chú</label><input type="text" id="txDesc" placeholder="Ghi chú..."></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitTx()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mob-item" onclick="window.location.href='dashboard.html'"><span class="mob-icon">🏠</span>Tổng quan</div>
+    <div class="mob-item active"><span class="mob-icon">💳</span>Giao dịch</div>
+    <div class="mob-item" onclick="openModal()"><span class="mob-icon">➕</span>Thêm</div>
+    <div class="mob-item"><span class="mob-icon">🎯</span>Mục tiêu</div>
+    <div class="mob-item"><span class="mob-icon">👤</span>Hồ sơ</div>
+  </div>
+</nav>
+
+<script>
+const API = '/api';
+const token = localStorage.getItem('sf_token');
+const user = JSON.parse(localStorage.getItem('sf_user') || '{}');
+if (!token) window.location.href = 'index.html';
+
+const firstName = (user.name || 'U').charAt(0).toUpperCase();
+document.getElementById('sidebarAvatar').textContent = firstName;
+document.getElementById('headerAvatar').textContent = firstName;
+document.getElementById('sidebarName').textContent = user.name || 'Người dùng';
+
+// Set current month
+const now = new Date();
+document.getElementById('filterMonth').value = now.getMonth() + 1;
+document.getElementById('filterYear').value = now.getFullYear();
+
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(API + url, { ...opts, headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}`, ...opts.headers } });
+  if (res.status === 401) { logout(); return null; }
+  return res.json();
+}
+
+function fmtMoney(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(1) + ' tỷ';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + ' triệu';
+  return new Intl.NumberFormat('vi-VN').format(n) + '₫';
+}
+function fmtDate(d) { return new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+
+let currentPage = 1;
+
+async function loadTransactions(page = 1) {
+  currentPage = page;
+  const type = document.getElementById('filterType').value;
+  const month = document.getElementById('filterMonth').value;
+  const year = document.getElementById('filterYear').value;
+  let url = `/transactions?page=${page}&limit=15`;
+  if (type) url += `&type=${type}`;
+  if (month) url += `&month=${month}`;
+  if (year) url += `&year=${year}`;
+
+  const data = await apiFetch(url);
+  if (!data?.success) return;
+
+  const { transactions, total, pages } = data;
+  const content = document.getElementById('txContent');
+
+  if (transactions.length === 0) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-icon">💸</div><p>Không có giao dịch nào<br>trong khoảng thời gian này</p></div>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  content.innerHTML = `
+    <table class="tx-table">
+      <thead><tr>
+        <th>Giao Dịch</th>
+        <th>Danh Mục</th>
+        <th>Ngày</th>
+        <th>Loại</th>
+        <th style="text-align:right">Số Tiền</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        ${transactions.map(tx => `
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:12px">
+              <div class="tx-icon-sm" style="background:${tx.type==='income'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)'}">${tx.emoji||'💰'}</div>
+              <div>
+                <div style="font-weight:600">${tx.description || tx.category}</div>
+                <div style="font-size:11px;color:var(--text3)">${tx.category}</div>
+              </div>
+            </div></td>
+            <td><span class="badge ${tx.type==='income'?'badge-income':'badge-expense'}">${tx.category}</span></td>
+            <td style="color:var(--text2)">${fmtDate(tx.date)}</td>
+            <td><span class="badge ${tx.type==='income'?'badge-income':'badge-expense'}">${tx.type==='income'?'Thu nhập':'Chi tiêu'}</span></td>
+            <td style="text-align:right"><span class="${tx.type==='income'?'amount-positive':'amount-negative'}">${tx.type==='income'?'+':'-'}${fmtMoney(tx.amount)}</span></td>
+            <td><button class="delete-btn" onclick="deleteTx('${tx._id}')">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="font-size:13px;color:var(--text3);margin-top:16px">Tổng: ${total} giao dịch</div>`;
+
+  // Pagination
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = '';
+  for (let i = 1; i <= pages; i++) {
+    pag.innerHTML += `<button class="page-btn ${i===page?'active':''}" onclick="loadTransactions(${i})">${i}</button>`;
+  }
+}
+
+async function deleteTx(id) {
+  if (!confirm('Xóa giao dịch này?')) return;
+  const data = await apiFetch(`/transactions/${id}`, { method:'DELETE' });
+  if (data?.success) { showToast('Đã xóa giao dịch', 'success'); loadTransactions(currentPage); }
+  else showToast('Không thể xóa', 'error');
+}
+
+// Modal
+const incomeCategories = ['Lương','Thưởng','Freelance','Đầu tư','Khác (Thu)'];
+const expenseCategories = ['Ăn uống','Di chuyển','Giải trí','Mua sắm','Y tế','Giáo dục','Hóa đơn','Khác (Chi)'];
+let txType = 'income';
+
+function openModal() {
+  setType('income');
+  document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('txAmount').value = '';
+  document.getElementById('txDesc').value = '';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function setType(t) {
+  txType = t;
+  document.getElementById('typeIncome').classList.toggle('active', t==='income');
+  document.getElementById('typeExpense').classList.toggle('active', t==='expense');
+  document.getElementById('txCategory').innerHTML = (t==='income'?incomeCategories:expenseCategories).map(c=>`<option>${c}</option>`).join('');
+}
+
+async function submitTx() {
+  const amount = Number(document.getElementById('txAmount').value);
+  const category = document.getElementById('txCategory').value;
+  const description = document.getElementById('txDesc').value;
+  const date = document.getElementById('txDate').value;
+  if (!amount || amount <= 0) return showToast('Vui lòng nhập số tiền hợp lệ', 'error');
+  const emojiMap = {'Ăn uống':'🍜','Di chuyển':'🚗','Giải trí':'🎬','Mua sắm':'🛒','Y tế':'🏥','Giáo dục':'📚','Lương':'💼','Thưởng':'🏆','Freelance':'💻','Đầu tư':'📈'};
+  const data = await apiFetch('/transactions', { method:'POST', body: JSON.stringify({ type:txType, amount, category, description, date, emoji: emojiMap[category]||'💰' }) });
+  if (data?.success) { closeModal(); showToast('Đã lưu giao dịch!', 'success'); loadTransactions(1); }
+  else showToast(data?.message || 'Có lỗi xảy ra', 'error');
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+function logout() { localStorage.removeItem('sf_token'); localStorage.removeItem('sf_user'); window.location.href = 'index.html'; }
+
+loadTransactions();
+</script>
+</body>
+</html>
