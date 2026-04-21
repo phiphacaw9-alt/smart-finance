@@ -416,8 +416,18 @@ let selectedBank = 'vcb';
 // Check if returning from OAuth
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('connected') === 'true') {
-  // Get tokens from cookie via backend
-  loadSavedTokens();
+  const tokensParam = urlParams.get('tokens');
+  if (tokensParam) {
+    try {
+      gmailTokens = JSON.parse(decodeURIComponent(tokensParam));
+      localStorage.setItem('gmail_tokens', JSON.stringify(gmailTokens));
+      setConnected('Gmail đã kết nối thành công!');
+      // Clean URL
+      window.history.replaceState({}, document.title, '/gmail.html');
+    } catch(e) { console.error('Token parse error', e); }
+  }
+} else if (urlParams.get('error')) {
+  showToast('Đăng nhập Google thất bại! Thử lại.', 'error');
 }
 
 async function apiFetch(url, opts = {}) {

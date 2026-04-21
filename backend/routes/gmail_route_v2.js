@@ -28,14 +28,23 @@ router.get('/callback', async (req, res) => {
   const { code, state } = req.query;
   try {
     const { tokens } = await oauth2Client.getToken(code);
-    // Lưu tokens vào cookie tạm (production nên lưu DB)
     res.cookie('gmail_tokens', JSON.stringify(tokens), {
-      httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000
+      httpOnly: false, maxAge: 7 * 24 * 60 * 60 * 1000, sameSite: 'lax'
     });
-    res.redirect(`/gmail.html?connected=true&userId=${state}`);
+    const encodedTokens = encodeURIComponent(JSON.stringify(tokens));
+    res.redirect('/gmail.html?connected=true&tokens=' + encodedTokens);
   } catch (err) {
+    console.error('Gmail callback error:', err);
     res.redirect('/gmail.html?error=auth_failed');
   }
+});
+
+// ─── GET /api/gmail/tokens ─── Lấy tokens từ cookie
+router.get('/tokens', protect, (req, res) => {
+  const tokens = req.cookies && req.cookies.gmail_tokens;
+  if (!tokens) return res.json({ success: false });
+  try { res.json({ success: true, tokens: JSON.parse(tokens) }); }
+  catch { res.json({ success: false }); }
 });
 
 // ─── POST /api/gmail/sync ─── Đồng bộ email ngân hàng
