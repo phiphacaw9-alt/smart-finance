@@ -39,6 +39,14 @@ const transactionSchema = new mongoose.Schema({
   emoji: {
     type: String,
     default: '💰'
+  },
+  emailId: {
+    type: String,
+    default: null  // Gmail message ID (ป้องกัน import ซ้ำ)
+  },
+  source: {
+    type: String,
+    default: 'manual'  // manual | gmail_vcb | gmail_acb | csv_import
   }
 }, { timestamps: true });
 
