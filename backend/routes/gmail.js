@@ -16,8 +16,9 @@ const oauth2Client = new google.auth.OAuth2(
 router.get('/auth-url', protect, (req, res) => {
   const scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
   const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
+   access_type: 'offline',
+   prompt: 'consent',
+   scope: scopes,
     state: req.user._id.toString() // truyền userId qua state
   });
   res.json({ success: true, url });
