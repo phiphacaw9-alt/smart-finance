@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFinance – Nhập Từ Ảnh</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<style>
+:root{--primary:#4F46E5;--primary-light:#6366f1;--primary-glow:rgba(79,70,229,0.25);--secondary:#22C55E;--danger:#EF4444;--warning:#F59E0B;--bg:#0B0F1A;--bg3:#1C2333;--card:#161D2F;--border:rgba(255,255,255,0.07);--text:#F0F4FF;--text2:#94A3B8;--text3:#64748B;--sidebar-w:260px;--header-h:70px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;z-index:100;transition:transform .3s}
+.sidebar-logo{display:flex;align-items:center;gap:12px;padding:0 24px 32px;border-bottom:1px solid var(--border)}
+.logo-icon{width:40px;height:40px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 16px var(--primary-glow)}
+.logo-text{font-size:18px;font-weight:700}.logo-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.sidebar-nav{flex:1;padding:24px 0;overflow-y:auto}
+.nav-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:8px 24px 4px}
+.nav-item{display:flex;align-items:center;gap:14px;padding:12px 24px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s;text-decoration:none;position:relative}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--text);background:rgba(79,70,229,0.12)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 3px 3px 0;background:var(--primary);box-shadow:0 0 10px var(--primary)}
+.nav-icon{width:20px;text-align:center;font-size:18px}
+.sidebar-footer{padding:20px 24px;border-top:1px solid var(--border)}
+.user-info{display:flex;align-items:center;gap:12px;padding:8px;border-radius:12px}
+.user-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#818CF8);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.user-name{font-size:14px;font-weight:600}.user-role{font-size:11px;color:var(--text3)}
+.logout-btn{margin-left:auto;color:var(--text3);font-size:18px;background:none;border:none;cursor:pointer}.logout-btn:hover{color:var(--danger)}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99}
+.main{margin-left:var(--sidebar-w);min-height:100vh}
+.header{height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;position:sticky;top:0;z-index:90}
+.header-title{font-size:20px;font-weight:700;margin-right:auto}.header-title span{color:var(--primary-light)}
+.header-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#818CF8);display:flex;align-items:center;justify-content:center;font-weight:700}
+.content{padding:28px 32px;max-width:900px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--text2);margin-bottom:28px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.card-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.card-title{font-size:16px;font-weight:700}.card-sub{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(--border);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:rgba(79,70,229,0.05)}
+.drop-zone.has-image{border-color:var(--secondary);background:rgba(34,197,94,0.05)}
+#fileInput{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop-icon{font-size:52px;margin-bottom:16px}
+.drop-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.drop-sub{font-size:13px;color:var(--text3)}
+.drop-btn{display:inline-block;margin-top:16px;padding:10px 24px;background:var(--primary);color:#fff;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+
+/* IMAGE PREVIEW */
+.img-preview-wrap{margin-top:16px;position:relative;display:none}
+.img-preview{max-width:100%;max-height:300px;border-radius:12px;border:1px solid var(--border);object-fit:contain}
+.img-remove{position:absolute;top:8px;right:8px;background:rgba(239,68,68,0.9);color:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600}
+
+/* OCR PROGRESS */
+.ocr-status{background:var(--bg3);border-radius:12px;padding:16px;margin:16px 0;display:none}
+.ocr-status-text{font-size:14px;font-weight:600;margin-bottom:10px}
+.ocr-bar-bg{height:8px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden}
+.ocr-bar-fill{height:100%;background:var(--primary);border-radius:99px;transition:width .3s;width:0%}
+.ocr-pct{font-size:12px;color:var(--text3);margin-top:6px;text-align:right}
+
+/* RESULT FORM */
+.result-section{display:none}
+.ocr-raw{background:var(--bg3);border-radius:12px;padding:16px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;max-height:120px;overflow-y:auto;font-family:monospace;white-space:pre-wrap}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-group{margin-bottom:0}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.form-group input,.form-group select{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary)}
+.form-group select option{background:var(--bg3)}
+.type-toggle{display:flex;gap:8px;margin-bottom:20px}
+.type-btn{flex:1;padding:10px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .2s}
+.type-btn.income.active{background:rgba(34,197,94,0.15);border-color:var(--secondary);color:var(--secondary)}
+.type-btn.expense.active{background:rgba(239,68,68,0.15);border-color:var(--danger);color:var(--danger)}
+
+/* TIPS */
+.tips-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tip-card{background:var(--bg3);border-radius:14px;padding:16px;text-align:center}
+.tip-icon{font-size:28px;margin-bottom:10px}
+.tip-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.tip-desc{font-size:12px;color:var(--text3);line-height:1.6}
+
+/* BTN */
+.btn{padding:12px 24px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 16px var(--primary-glow)}
+.btn-primary:hover{background:var(--primary-light);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-success{background:var(--secondary);color:#fff}.btn-success:hover{background:#16a34a;transform:translateY(-1px)}
+.btn-success:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--primary);color:var(--text)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 22px;font-size:14px;font-weight:500;z-index:300;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid var(--secondary)}
+.toast.error{border-left:4px solid var(--danger)}
+
+/* MOBILE */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:8px 0;z-index:200}
+.mobile-nav-inner{display:flex;justify-content:space-around}
+.mob-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3)}
+.mob-item.active{color:var(--primary)}.mob-icon{font-size:22px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeUp .4s ease both}
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}.card:nth-child(3){animation-delay:.15s}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,.5)}
+  .overlay.show{display:block}.hamburger{display:block}.main{margin-left:0}
+  .content{padding:20px 16px 90px}.form-grid{grid-template-columns:1fr}.tips-grid{grid-template-columns:1fr}
+  .mobile-nav{display:block}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">💰</div>
+    <div><div class="logo-text">SmartFinance</div><div class="logo-sub">Quản Lý Tài Chính</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Chính</div>
+    <a class="nav-item" href="dashboard.html"><span class="nav-icon">🏠</span> Tổng Quan</a>
+    <a class="nav-item" href="transactions.html"><span class="nav-icon">💳</span> Giao Dịch</a>
+    <a class="nav-item" href="import.html"><span class="nav-icon">📥</span> Import CSV</a>
+    <a class="nav-item active" href="ocr.html"><span class="nav-icon">📸</span> Nhập Từ Ảnh</a>
+    <a class="nav-item" href="gmail.html"><span class="nav-icon">📧</span> Gmail Sync</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📊</span> Phân Tích</a>
+    <a class="nav-item" href="#"><span class="nav-icon">🎯</span> Mục Tiêu</a>
+    <div class="nav-label" style="margin-top:8px">Khác</div>
+    <a class="nav-item" href="#"><span class="nav-icon">🔔</span> Thông Báo</a>
+    <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Cài Đặt</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sidebarAvatar">N</div>
+      <div><div class="user-name" id="sidebarName">...</div><div class="user-role">Tài khoản Premium</div></div>
+      <button class="logout-btn" onclick="logout()">⇥</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="header">
+    <button class="hamburger" onclick="openSidebar()">☰</button>
+    <div class="header-title">Nhập Từ <span>Ảnh</span></div>
+    <div class="header-avatar" id="headerAvatar">N</div>
+  </header>
+
+  <div class="content">
+    <div class="page-title">📸 Nhập Giao Dịch Từ Ảnh</div>
+    <div class="page-sub">Chụp hoặc upload ảnh biên lai, slip chuyển tiền — hệ thống tự động đọc và nhập giao dịch</div>
+
+    <!-- UPLOAD ZONE -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(79,70,229,0.15)">📸</div>
+        <div>
+          <div class="card-title">Upload Ảnh Giao Dịch</div>
+          <div class="card-sub">Hỗ trợ: JPG, PNG, WEBP — Chụp ảnh hoặc chọn từ máy tính</div>
+        </div>
+      </div>
+
+      <div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+        <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+        <div class="drop-icon" id="dropIcon">📷</div>
+        <div class="drop-title" id="dropTitle">Kéo thả ảnh vào đây</div>
+        <div class="drop-sub" id="dropSub">hoặc nhấn để chọn ảnh / chụp ảnh</div>
+        <div class="drop-btn">📂 Chọn Ảnh</div>
+      </div>
+
+      <!-- Image Preview -->
+      <div class="img-preview-wrap" id="imgPreviewWrap">
+        <img id="imgPreview" class="img-preview" src="" alt="Preview">
+        <button class="img-remove" onclick="removeImage()">✕ Xóa</button>
+      </div>
+
+      <!-- OCR Progress -->
+      <div class="ocr-status" id="ocrStatus">
+        <div class="ocr-status-text" id="ocrStatusText">🔍 Đang đọc ảnh...</div>
+        <div class="ocr-bar-bg"><div class="ocr-bar-fill" id="ocrBar"></div></div>
+        <div class="ocr-pct" id="ocrPct">0%</div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-primary" id="btnScan" onclick="startOCR()" disabled>
+          🔍 Đọc Ảnh (OCR)
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card result-section" id="resultSection">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(34,197,94,0.15)">✅</div>
+        <div>
+          <div class="card-title">Kết Quả Nhận Dạng</div>
+          <div class="card-sub">Kiểm tra và chỉnh sửa trước khi lưu</div>
+        </div>
+      </div>
+
+      <!-- Raw OCR text -->
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">📄 Văn bản nhận dạng từ ảnh:</div>
+      <div class="ocr-raw" id="ocrRaw">...</div>
+
+      <!-- Form -->
+      <div class="type-toggle">
+        <button class="type-btn expense active" id="typeExpense" onclick="setType('expense')">📉 Chi Tiêu</button>
+        <button class="type-btn income" id="typeIncome" onclick="setType('income')">📈 Thu Nhập</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>💰 Số Tiền (₫)</label>
+          <input type="number" id="resAmount" placeholder="0" min="1">
+        </div>
+        <div class="form-group">
+          <label>📅 Ngày Giao Dịch</label>
+          <input type="date" id="resDate">
+        </div>
+        <div class="form-group">
+          <label>📋 Danh Mục</label>
+          <select id="resCategory">
+            <option value="Ăn uống">🍜 Ăn uống</option>
+            <option value="Di chuyển">🚗 Di chuyển</option>
+            <option value="Giải trí">🎬 Giải trí</option>
+            <option value="Mua sắm">🛒 Mua sắm</option>
+            <option value="Y tế">🏥 Y tế</option>
+            <option value="Giáo dục">📚 Giáo dục</option>
+            <option value="Hóa đơn">💡 Hóa đơn</option>
+            <option value="Lương">💼 Lương</option>
+            <option value="Thưởng">🏆 Thưởng</option>
+            <option value="Freelance">💻 Freelance</option>
+            <option value="Khác (Chi)">💸 Khác (Chi)</option>
+            <option value="Khác (Thu)">💰 Khác (Thu)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📝 Mô Tả</label>
+          <input type="text" id="resDesc" placeholder="Ghi chú giao dịch...">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="resetAll()">🔄 Quét Ảnh Mới</button>
+        <button class="btn btn-success" id="btnSave" onclick="saveTransaction()">💾 Lưu Giao Dịch</button>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(245,158,11,0.15)">💡</div>
+        <div><div class="card-title">Mẹo Để Nhận Dạng Tốt Hơn</div></div>
+      </div>
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-icon">☀️</div>
+          <div class="tip-title">Ánh Sáng Tốt</div>
+          <div class="tip-desc">Chụp ảnh ở nơi đủ sáng, tránh bóng tối hoặc chói sáng</div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">📐</div>
+          <div class="tip-title">Góc Thẳng</div>
+          <div class="tip-desc">Giữ điện thoại thẳng đứng, song song với tờ biên lai</div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">🔍</div>
+          <div class="tip-title">Ảnh Rõ Nét</div>
+          <div class="tip-desc">Đảm bảo text đọc được rõ ràng, không bị nhòe hoặc mờ</div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">📱</div>
+          <div class="tip-title">Screenshot</div>
+          <div class="tip-desc">Screenshot từ app ngân hàng cho kết quả tốt nhất</div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">✂️</div>
+          <div class="tip-title">Cắt Ảnh</div>
+          <div class="tip-desc">Cắt ảnh chỉ giữ phần biên lai, bỏ phần thừa xung quanh</div>
+        </div>
+        <div class="tip-card">
+          <div class="tip-icon">🏦</div>
+          <div class="tip-title">Slip Ngân Hàng</div>
+          <div class="tip-desc">Biên lai ATM, slip chuyển khoản cho kết quả chính xác nhất</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mob-item" onclick="location.href='dashboard.html'"><span class="mob-icon">🏠</span>Tổng quan</div>
+    <div class="mob-item" onclick="location.href='transactions.html'"><span class="mob-icon">💳</span>Giao dịch</div>
+    <div class="mob-item active"><span class="mob-icon">📸</span>Ảnh OCR</div>
+    <div class="mob-item" onclick="location.href='import.html'"><span class="mob-icon">📥</span>Import</div>
+  </div>
+</nav>
+
+<script>
+const API = '/api';
+const token = localStorage.getItem('sf_token');
+const user = JSON.parse(localStorage.getItem('sf_user') || '{}');
+if (!token) location.href = 'index.html';
+
+['sidebarAvatar','headerAvatar'].forEach(id => document.getElementById(id).textContent = (user.name||'U').charAt(0).toUpperCase());
+document.getElementById('sidebarName').textContent = user.name || 'Người dùng';
+
+let selectedFile = null;
+let txType = 'expense';
+
+// ─── File Handling ───
+function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('dropZone').classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  if (!file.type.startsWith('image/')) {
+    showToast('Vui lòng chọn file ảnh!', 'error'); return;
+  }
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('imgPreview').src = e.target.result;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('dropZone').classList.add('has-image');
+    document.getElementById('dropIcon').textContent = '✅';
+    document.getElementById('dropTitle').textContent = file.name;
+    document.getElementById('dropSub').textContent = (file.size/1024).toFixed(1) + ' KB';
+    document.getElementById('btnScan').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('dropZone').classList.remove('has-image');
+  document.getElementById('dropIcon').textContent = '📷';
+  document.getElementById('dropTitle').textContent = 'Kéo thả ảnh vào đây';
+  document.getElementById('dropSub').textContent = 'hoặc nhấn để chọn ảnh / chụp ảnh';
+  document.getElementById('btnScan').disabled = true;
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('ocrStatus').style.display = 'none';
+}
+
+// ─── OCR ───
+async function startOCR() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('btnScan');
+  btn.disabled = true; btn.textContent = '⏳ Đang xử lý...';
+  document.getElementById('ocrStatus').style.display = 'block';
+  document.getElementById('resultSection').style.display = 'none';
+
+  try {
+    const result = await Tesseract.recognize(selectedFile, 'vie+eng', {
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round(m.progress * 100);
+          document.getElementById('ocrBar').style.width = pct + '%';
+          document.getElementById('ocrPct').textContent = pct + '%';
+          document.getElementById('ocrStatusText').textContent =
+            pct < 30 ? '🔍 Đang phân tích ảnh...' :
+            pct < 60 ? '📖 Đang nhận dạng chữ...' :
+            pct < 90 ? '🧠 Đang xử lý kết quả...' : '✅ Hoàn tất!';
+        }
+      }
+    });
+
+    const text = result.data.text;
+    document.getElementById('ocrRaw').textContent = text || '(Không nhận dạng được chữ)';
+    parseOCRResult(text);
+    document.getElementById('ocrStatus').style.display = 'none';
+    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+    showToast('Nhận dạng ảnh thành công!', 'success');
+
+  } catch (err) {
+    showToast('Lỗi nhận dạng ảnh. Thử ảnh khác!', 'error');
+    document.getElementById('ocrStatus').style.display = 'none';
+  }
+
+  btn.disabled = false; btn.textContent = '🔍 Đọc Ảnh (OCR)';
+}
+
+// ─── Parse OCR Result ───
+function parseOCRResult(text) {
+  const t = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+
+  // ── ດຶງຈຳນວນເງີນ ──
+  const amountPatterns = [
+    /(?:so tien|số tiền|amount|tong tien|tổng tiền|gia tri|giá trị)[:\s]*([0-9]{1,3}(?:[.,][0-9]{3})*(?:\.[0-9]+)?)\s*(?:VND|vnd|đ|d)?/i,
+    /([0-9]{1,3}(?:[.,][0-9]{3})+)\s*(?:VND|vnd|đ)/i,
+    /(?:chuyen|chuyển|nhan|nhận)[:\s]*([0-9]{1,3}(?:[.,][0-9]{3})*)/i,
+  ];
+  let amount = 0;
+  for (const pattern of amountPatterns) {
+    const m = t.match(pattern);
+    if (m) {
+      amount = parseInt(m[1].replace(/[.,]/g, ''));
+      if (amount > 0) break;
+    }
+  }
+  // fallback: ຊອກຕົວເລກໃຫຍ່ທີ່ສຸດ
+  if (amount === 0) {
+    const nums = t.match(/[0-9]{4,}/g);
+    if (nums) {
+      amount = Math.max(...nums.map(n => parseInt(n)));
+    }
+  }
+  document.getElementById('resAmount').value = amount || '';
+
+  // ── ດຶງວັນທີ ──
+  const datePatterns = [
+    /(\d{2})[\/\-](\d{2})[\/\-](\d{4})/,
+    /(\d{4})[\/\-](\d{2})[\/\-](\d{2})/,
+    /(\d{2})\.(\d{2})\.(\d{4})/,
+  ];
+  let dateVal = new Date().toISOString().split('T')[0];
+  for (const dp of datePatterns) {
+    const m = t.match(dp);
+    if (m) {
+      if (dp === datePatterns[1]) dateVal = `${m[1]}-${m[2]}-${m[3]}`;
+      else dateVal = `${m[3]}-${m[2]}-${m[1]}`;
+      break;
+    }
+  }
+  document.getElementById('resDate').value = dateVal;
+
+  // ── ຄາດເດົາໝວດໝູ່ ──
+  const tLower = t.toLowerCase();
+  let category = 'Khác (Chi)';
+  let detectedType = 'expense';
+
+  if (tLower.includes('luong') || tLower.includes('lương') || tLower.includes('salary')) {
+    category = 'Lương'; detectedType = 'income';
+  } else if (tLower.includes('thuong') || tLower.includes('thưởng')) {
+    category = 'Thưởng'; detectedType = 'income';
+  } else if (tLower.includes('vinmart') || tLower.includes('siêu thị') || tLower.includes('baemin') || tLower.includes('shopeefood')) {
+    category = 'Ăn uống';
+  } else if (tLower.includes('grab') || tLower.includes('xăng') || tLower.includes('parking')) {
+    category = 'Di chuyển';
+  } else if (tLower.includes('shopee') || tLower.includes('lazada') || tLower.includes('tiki')) {
+    category = 'Mua sắm';
+  } else if (tLower.includes('cgv') || tLower.includes('netflix') || tLower.includes('cinema')) {
+    category = 'Giải trí';
+  } else if (tLower.includes('benh vien') || tLower.includes('thuốc') || tLower.includes('pharma')) {
+    category = 'Y tế';
+  } else if (tLower.includes('điện') || tLower.includes('nước') || tLower.includes('internet')) {
+    category = 'Hóa đơn';
+  }
+
+  setType(detectedType);
+  document.getElementById('resCategory').value = category;
+
+  // ── ດຶງ description ──
+  const descPatterns = [
+    /(?:noi dung|nội dung|mo ta|mô tả|nd|description)[:\s]+([^\n.]{5,50})/i,
+    /(?:chuyen tien|chuyển tiền)[:\s]+([^\n.]{3,40})/i,
+  ];
+  let desc = '';
+  for (const dp of descPatterns) {
+    const m = t.match(dp);
+    if (m) { desc = m[1].trim(); break; }
+  }
+  document.getElementById('resDesc').value = desc || '';
+}
+
+// ─── Type Toggle ───
+function setType(type) {
+  txType = type;
+  document.getElementById('typeIncome').classList.toggle('active', type === 'income');
+  document.getElementById('typeExpense').classList.toggle('active', type === 'expense');
+  // Update category options
+  const cat = document.getElementById('resCategory');
+  if (type === 'income') {
+    if (['Ăn uống','Di chuyển','Giải trí','Mua sắm','Y tế','Giáo dục','Hóa đơn','Khác (Chi)'].includes(cat.value)) {
+      cat.value = 'Lương';
+    }
+  }
+}
+
+// ─── Save Transaction ───
+async function saveTransaction() {
+  const amount = Number(document.getElementById('resAmount').value);
+  const category = document.getElementById('resCategory').value;
+  const description = document.getElementById('resDesc').value || category;
+  const date = document.getElementById('resDate').value;
+
+  if (!amount || amount <= 0) return showToast('Vui lòng nhập số tiền hợp lệ!', 'error');
+
+  const emojiMap = {'Ăn uống':'🍜','Di chuyển':'🚗','Giải trí':'🎬','Mua sắm':'🛒','Y tế':'🏥','Giáo dục':'📚','Lương':'💼','Thưởng':'🏆','Freelance':'💻','Hóa đơn':'💡'};
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
+
+  try {
+    const res = await fetch(API + '/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+      body: JSON.stringify({ type: txType, amount, category, description, date, emoji: emojiMap[category]||'💰', source: 'ocr_image' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✅ Đã lưu giao dịch thành công!', 'success');
+      setTimeout(() => { if (confirm('Lưu xong! Tiếp tục quét ảnh mới?')) resetAll(); else location.href = 'transactions.html'; }, 1000);
+    } else showToast(data.message || 'Lỗi lưu giao dịch', 'error');
+  } catch {
+    showToast('Không thể kết nối server!', 'error');
+  }
+  btn.disabled = false; btn.textContent = '💾 Lưu Giao Dịch';
+}
+
+// ─── Reset ───
+function resetAll() {
+  removeImage();
+  document.getElementById('resultSection').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Helpers ───
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+function logout() { localStorage.removeItem('sf_token'); localStorage.removeItem('sf_user'); location.href = 'index.html'; }
+</script>
+</body>
+</html>
